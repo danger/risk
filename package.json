@@ -39,6 +39,7 @@
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "npm run build",
+    "release": "node --experimental-strip-types scripts/release.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
