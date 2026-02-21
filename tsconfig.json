@@ -17,9 +17,7 @@
     "outDir": "dist",
     "rootDir": "source",
     "skipLibCheck": true,
-    "allowImportingTsExtensions": true,
-    "rewriteRelativeImportExtensions": true,
-    "emitDeclarationOnly": true
+    "rewriteRelativeImportExtensions": true
   },
   "include": ["source/**/*.ts"],
   "exclude": ["source/**/_tests/**"]

@@ -5,7 +5,9 @@ import { runCI } from "./danger-ci.ts"
 import { runPR } from "./danger-pr.ts"
 
 // Register the custom loader that maps `import 'danger'` -> `risk`
-register("../runner/danger-loader.ts", import.meta.url)
+// Use the same extension as the current file (.ts in source, .js in dist)
+const ext = import.meta.url.endsWith(".ts") ? ".ts" : ".js"
+register(`../runner/danger-loader${ext}`, import.meta.url)
 
 const subcommand = process.argv[2]
 const subArgs = process.argv.slice(3)

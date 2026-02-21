@@ -2,20 +2,43 @@
   "name": "risk",
   "version": "0.0.1",
   "description": "A modernized, minimal Danger JS for GitHub",
+  "license": "MIT",
+  "author": "Orta Therox <orta.therox@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danger/risk.git"
+  },
+  "homepage": "https://github.com/danger/risk#readme",
+  "bugs": {
+    "url": "https://github.com/danger/risk/issues"
+  },
+  "keywords": [
+    "danger",
+    "code-review",
+    "github",
+    "pull-request",
+    "ci",
+    "linting"
+  ],
   "type": "module",
   "exports": {
     ".": {
-      "types": "./source/index.d.ts",
-      "import": "./source/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     }
   },
   "bin": {
-    "danger": "./source/cli/danger.ts"
+    "danger": "./dist/cli/danger.js"
   },
+  "files": [
+    "dist"
+  ],
   "engines": {
     "node": ">=22.6.0"
   },
   "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
