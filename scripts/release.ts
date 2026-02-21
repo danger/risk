@@ -4,16 +4,15 @@
  * Release script for risk.
  *
  * Usage:
- *   node --experimental-strip-types scripts/release.ts <patch|minor|major>
+ *   yarn release <patch|minor|major>
  *
  * What it does:
- *   1. Checks for clean working tree
+ *   1. Checks for clean working tree on main
  *   2. Runs tests and typecheck
  *   3. Bumps version in package.json
- *   4. Extracts release notes from CHANGELOG.md
- *   5. Commits, tags, and pushes
- *   6. Creates a GitHub release with the changelog entry
- *   7. Publishes to npm
+ *   4. Commits, tags, and pushes
+ *
+ * The publish.yml workflow handles the rest (GitHub release + npm publish).
  */
 
 import { execSync } from "node:child_process"
@@ -38,7 +37,7 @@ function die(msg: string): never {
 
 const bump = process.argv[2] as "patch" | "minor" | "major" | undefined
 if (!bump || !["patch", "minor", "major"].includes(bump)) {
-  console.log("Usage: scripts/release.ts <patch|minor|major>")
+  console.log("Usage: yarn release <patch|minor|major>")
   process.exit(1)
 }
 
@@ -55,10 +54,10 @@ if (branch !== "main") {
 }
 
 console.log("Running tests...")
-run("npm test", { stdio: "inherit" })
+run("yarn test", { stdio: "inherit" })
 
 console.log("Running typecheck...")
-run("npm run typecheck", { stdio: "inherit" })
+run("yarn typecheck", { stdio: "inherit" })
 
 // --- Bump version ---
 
@@ -76,24 +75,6 @@ pkg.version = newVersion
 writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n")
 console.log(`\nVersion: ${oldVersion} -> ${newVersion}`)
 
-// --- Extract changelog entry ---
-
-const changelogPath = resolve(root, "CHANGELOG.md")
-const changelog = readFileSync(changelogPath, "utf-8")
-
-// Find the section for the new version, fall back to the first section
-const sections = changelog.split(/^## /m).filter(Boolean)
-const currentSection = sections.find(s => s.startsWith(newVersion)) ?? sections[0]
-const releaseNotes = currentSection
-  ? currentSection.replace(/^\S+\s*\n/, "").trim() // Remove the version heading line
-  : `Release ${newVersion}`
-
-if (!currentSection?.startsWith(newVersion)) {
-  console.log(`Warning: No CHANGELOG entry found for ${newVersion}, using first entry.`)
-}
-
-console.log(`\nRelease notes:\n${releaseNotes}\n`)
-
 // --- Commit, tag, push ---
 
 const tag = `v${newVersion}`
@@ -103,17 +84,4 @@ run(`git commit -m "Release ${tag}"`)
 run(`git tag -a ${tag} -m "Release ${tag}"`)
 run(`git push origin main --follow-tags`)
 
-console.log(`Pushed ${tag} to origin.`)
-
-// --- GitHub release ---
-
-console.log("Creating GitHub release...")
-const releaseBody = `## ${newVersion}\n\n${releaseNotes}`
-run(`gh release create ${tag} --title "${tag}" --notes ${JSON.stringify(releaseBody)}`)
-console.log(`GitHub release created: https://github.com/danger/risk/releases/tag/${tag}`)
-
-// --- npm publish ---
-
-console.log("Publishing to npm...")
-run("npm publish", { stdio: "inherit" })
-console.log(`\nPublished risk@${newVersion} to npm.`)
+console.log(`\nPushed ${tag} to origin. The publish workflow will handle the rest.`)
