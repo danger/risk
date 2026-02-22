@@ -23,7 +23,7 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./index.d.ts",
       "import": "./dist/index.js"
     }
   },
@@ -31,7 +31,9 @@
     "danger": "./dist/cli/danger.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "index.d.ts",
+    "danger.d.ts"
   ],
   "packageManager": "yarn@4.12.0",
   "engines": {

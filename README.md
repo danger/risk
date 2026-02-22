@@ -29,7 +29,15 @@ if (bigPR) {
 message(`This PR modifies ${danger.git.modified_files.length} file(s).`)
 ```
 
-Existing Dangerfiles that `import { danger } from "danger"` will also work — a built-in ESM loader handles the redirect.
+Existing Dangerfiles that `import { danger } from "danger"` will also work — a built-in ESM loader handles the redirect at runtime. To get TypeScript support for the `"danger"` import, add `"risk"` to the `types` array in your `tsconfig.json`:
+
+```jsonc
+{
+  "compilerOptions": {
+    "types": ["risk"]
+  }
+}
+```
 
 ### Commands
 
