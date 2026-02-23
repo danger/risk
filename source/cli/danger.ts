@@ -1,4 +1,4 @@
-#!/usr/bin/env node --experimental-strip-types --no-warnings
+#!/usr/bin/env -S node --experimental-strip-types --no-warnings
 
 import { register } from "node:module"
 import { runCI } from "./danger-ci.ts"
