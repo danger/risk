@@ -159,8 +159,9 @@ export function buildGitDSL(
 
         for (const chunk of file.chunks) {
           for (const change of chunk.changes) {
-            if (change.type === "add") total++
-            else if (change.type === "del") total--
+            // Danger reports the size of the change, so removals count
+            // towards it too — not added minus removed.
+            if (change.type === "add" || change.type === "del") total++
           }
         }
       }

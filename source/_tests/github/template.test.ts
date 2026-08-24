@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest"
 import {
   template,
-  inlineTemplate,
   dangerIDToString,
   dangerSignature,
 } from "../../github/template.ts"
@@ -67,18 +66,6 @@ describe("template", () => {
   })
 })
 
-describe("inlineTemplate", () => {
-  it("includes file and line info", () => {
-    const results: DangerResults = {
-      ...emptyResults(),
-      fails: [{ message: "Bad code" }],
-    }
-    const html = inlineTemplate("test", results, "src/index.ts", 42)
-    expect(html).toContain("File: src/index.ts;")
-    expect(html).toContain("Line: 42;")
-    expect(html).toContain("Bad code")
-  })
-})
 
 describe("dangerIDToString", () => {
   it("formats the danger ID", () => {

@@ -1,8 +1,9 @@
-import { existsSync } from "node:fs"
+import { existsSync, realpathSync } from "node:fs"
 import { resolve, join } from "node:path"
 import { pathToFileURL } from "node:url"
 import { _getResults, _injectGlobals } from "../index.ts"
 import { runAllScheduledTasks } from "./context.ts"
+import { _setDangerfileURL } from "./danger-loader.ts"
 import type { DangerRuntimeContainer } from "../dsl/results.ts"
 
 /** The default dangerfile names to look for, in priority order */
@@ -41,8 +42,12 @@ export async function runDangerfile(dangerfilePath: string): Promise<DangerRunti
   // Inject globals for backwards compat
   _injectGlobals()
 
-  // Dynamic import the dangerfile
-  const fileURL = pathToFileURL(dangerfilePath).href
+  // Dynamic import the dangerfile. Flag it to the resolve hook first, so it
+  // loads as ESM even in a project without "type": "module". Node resolves
+  // symlinks when it resolves a specifier, so this has to be the real path
+  // for the hook's URL comparison to match.
+  const fileURL = pathToFileURL(realpathSync(dangerfilePath)).href
+  _setDangerfileURL(fileURL)
   const mod = await import(fileURL)
 
   // If there's a default export function, call it

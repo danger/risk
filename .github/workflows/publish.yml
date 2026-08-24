@@ -1,17 +1,25 @@
 name: Publish
 
+# Pushing a version tag is the deploy trigger. Who can create tags is
+# restricted by the "Release tags" repository ruleset, so that ruleset's
+# bypass list is the list of people who can ship a release.
 on:
   push:
     tags:
-      - "v*"
-
-permissions:
-  contents: write
-  id-token: write
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*"
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing
+    # Only tags can deploy to this environment, and only admins can create tags
+    # (the "Release tags" ruleset). Without it, anyone with write access could
+    # push a branch with an edited copy of this file and get npm's OIDC creds.
+    environment: npm-release
+
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -21,10 +29,34 @@ jobs:
           cache: yarn
           registry-url: https://registry.npmjs.org
 
+      # Trusted publishing needs a newer npm than node ships with
+      - run: npm install -g npm@latest
+
       - run: yarn install --immutable
+
+      - name: Check the tag matches the version in package.json
+        run: |
+          PKG=$(node -p "require('./package.json').version")
+          if [ "${GITHUB_REF_NAME#v}" != "$PKG" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version $PKG"
+            exit 1
+          fi
+
       - run: yarn typecheck
       - run: yarn test
-      - run: yarn build
+
+      # There's no NPM_TOKEN here: npm trusts this repo + workflow via OIDC.
+      # prepublishOnly does the build.
+      - run: npm publish --provenance --access public
+
+  release:
+    runs-on: ubuntu-latest
+    needs: publish
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Extract changelog for this version
         id: changelog
@@ -42,8 +74,3 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           body: ${{ steps.changelog.outputs.notes }}
-
-      - name: Publish to npm
-        run: yarn npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
