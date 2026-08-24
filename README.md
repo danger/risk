@@ -1,6 +1,6 @@
 # risk
 
-A smaller [Danger JS](https://danger.systems/js) runtime with a narrower scope: GitHub only, ESM only, Node 22+. Three runtime dependencies.
+A smaller [Danger JS](https://danger.systems/js) runtime with a narrower scope: GitHub only, ESM only, Node 22.18+. Three runtime dependencies.
 
 Full documentation lives at [danger.systems/js](https://danger.systems/js) — the Dangerfile API is the same.
 
@@ -12,7 +12,7 @@ yarn add risk --dev
 
 ## Usage
 
-Create a `dangerfile.ts` in your project root:
+Create a `dangerfile.ts` in your project root. Your project does not need `"type": "module"` — Dangerfiles are always evaluated as ESM:
 
 ```ts
 import { danger, warn, fail, message, markdown } from "risk"
@@ -39,6 +39,17 @@ Existing Dangerfiles that `import { danger } from "danger"` will also work — a
 }
 ```
 
+### Plugins
+
+`danger-plugin-*` packages work unchanged, including the CommonJS ones — the loader redirects their `danger` import (or `require`) to `risk`, and they share the same results, so `warn()` from inside a plugin lands in the Danger comment.
+
+```ts
+import { danger, warn } from "risk"
+import jest from "danger-plugin-jest"
+
+schedule(jest())
+```
+
 ### Commands
 
 **`danger ci`** — Run on CI against the current pull request.
@@ -48,7 +59,7 @@ danger ci [options]
 ```
 
 | Option | Description |
-|---|---|
+| --- | --- |
 | `-d, --dangerfile <path>` | Path to Dangerfile (default: `dangerfile.ts`) |
 | `--id <id>` | Unique identifier for this run (default: `"Danger"`) |
 | `-t, --text-only` | Print to stdout instead of posting comments |
@@ -56,6 +67,10 @@ danger ci [options]
 | `--new-comment` | Always create a new comment |
 | `--remove-previous-comments` | Remove previous Danger comments |
 | `--base-url <url>` | GitHub API base URL (for GitHub Enterprise) |
+| `--no-publish-check` | Don't set a commit status |
+| `-v, --verbose` | Verbose logging |
+
+`danger --version` prints the installed version.
 
 **`danger pr <url>`** — Test your Dangerfile against an existing PR without posting comments.
 
@@ -81,8 +96,9 @@ Set `--base-url` or the `DANGER_GITHUB_API_BASE_URL` environment variable to you
 
 - **GitHub only** — no GitLab or BitBucket support
 - **ESM only** — no CommonJS, no Babel transpilation
-- **Node 22+** — uses native type stripping, `fetch`, `parseArgs`, `styleText`
+- **Node 22.18+** — uses native type stripping, `fetch`, `parseArgs`, `styleText`
 - **Single process** — no subprocess/runner model
+- **No inline comments** — `fail`/`warn`/`message` accept a file and line, but results are always rendered in the single Danger comment (as `file#L12`) rather than posted onto the diff
 - **3 runtime deps** — `@octokit/rest`, `parse-diff`, `picomatch`
 
 ## Releasing
