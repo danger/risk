@@ -5,7 +5,7 @@ import { createMockAPI, loadFixture, loadTextFixture } from "../fixtures/mockGit
 import type { GitDSL } from "../../dsl/git-dsl.ts"
 import type { GitHubAPIClient } from "../../github/api.ts"
 
-function createGitDSL(): { gitDSL: GitDSL; api: GitHubAPIClient; baseSHA: string; headSHA: string } {
+function createGitDSL(diffOverride?: string): { gitDSL: GitDSL; api: GitHubAPIClient; baseSHA: string; headSHA: string } {
   const api = createMockAPI()
   const pr = loadFixture("github_pr.json")
   const files = [
@@ -29,7 +29,7 @@ function createGitDSL(): { gitDSL: GitDSL; api: GitHubAPIClient; baseSHA: string
     { sha: "18", filename: "tsconfig.json", status: "modified" as const, additions: 2, deletions: 1, changes: 3 },
   ]
 
-  const fullDiff = loadTextFixture("github_diff.diff")
+  const fullDiff = diffOverride ?? loadTextFixture("github_diff.diff")
   const gitJSON = buildGitJSONDSL(files)
   const baseSHA = pr.base.sha
   const headSHA = pr.head.sha
@@ -152,11 +152,28 @@ describe("Git DSL", () => {
   })
 
   describe("linesOfCode", () => {
-    it("counts the total lines of code", async () => {
+    // The fixture diff has 938 added and 213 removed lines. Danger reports the
+    // size of the change, so that is 1151 -- not 938 - 213.
+    it("counts added and removed lines towards the total", async () => {
       const { gitDSL } = createGitDSL()
-      const loc = await gitDSL.linesOfCode()
-      expect(loc).toBeTypeOf("number")
-      expect(loc).toBeGreaterThan(0)
+      expect(await gitDSL.linesOfCode()).toBe(1151)
+    })
+
+    it("never returns a negative count for a delete-heavy diff", async () => {
+      const { gitDSL } = createGitDSL(
+        [
+          "diff --git a/lib/big.ts b/lib/big.ts",
+          "--- a/lib/big.ts",
+          "+++ b/lib/big.ts",
+          "@@ -1,4 +1,2 @@",
+          "-one",
+          "-two",
+          "-three",
+          "+just one",
+          " context",
+        ].join("\n")
+      )
+      expect(await gitDSL.linesOfCode()).toBe(4)
     })
 
     it("allows filtering by file path pattern", async () => {
