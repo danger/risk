@@ -70,10 +70,6 @@ function buildSummaryMessage(dangerID: string, results: DangerResults): string {
 /** Format: `DangerID: danger-id-{id};` */
 export const dangerIDToString = (id: string) => `DangerID: danger-id-${id};`
 
-/** Format file and line info for HTML comments */
-export const fileLineToString = (file: string, line: number) =>
-  `  File: ${file};\n  Line: ${line};`
-
 /** Generate signature with runtime name and href */
 export const dangerSignature = (results: DangerResults) => {
   const meta = results.meta || {
@@ -111,30 +107,4 @@ ${results.markdowns.map((v) => v.message).join("\n\n")}
   ${dangerSignaturePostfix(results, commitID)}
 </p>
 `
-}
-
-/**
- * Creates an inline comment from Danger Results for a specific file/line.
- */
-export function inlineTemplate(
-  dangerID: string,
-  results: DangerResults,
-  file: string,
-  line: number
-): string {
-  const printViolation = (defaultEmoji: string) => (violation: Violation) => {
-    const emojiString = `:${defaultEmoji}:`
-    return `- ${violation.icon || emojiString} ${violation.message}`
-  }
-
-  return `
-<!--
-${buildSummaryMessage(dangerID, results)}
-${fileLineToString(file, line)}
--->
-${results.fails.map(printViolation("no_entry_sign")).join("\n")}
-${results.warnings.map(printViolation("warning")).join("\n")}
-${results.messages.map(printViolation("book")).join("\n")}
-${results.markdowns.map((v) => v.message).join("\n\n")}
-  `
 }
