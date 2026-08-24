@@ -1,4 +1,5 @@
-import { Violation, isInline } from "./types.ts"
+import type { Violation } from "./types.ts"
+import { isInline } from "./types.ts"
 
 /**
  * The representation of what running a Dangerfile generates.

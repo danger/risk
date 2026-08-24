@@ -17,7 +17,9 @@
     "outDir": "dist",
     "rootDir": "source",
     "skipLibCheck": true,
-    "rewriteRelativeImportExtensions": true
+    "rewriteRelativeImportExtensions": true,
+    // Keeps the source tree runnable under Node native type stripping
+    "verbatimModuleSyntax": true
   },
   "include": ["source/**/*.ts"],
   "exclude": ["source/**/_tests/**"]
